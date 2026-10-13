@@ -1,0 +1,103 @@
+---
+title: "Direction of change of the genes in the final SigXTalk pathways (microglia, AD vs Control)"
+author: "Ahmed"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    code_folding: show
+---
+
+# Purpose
+
+SigXTalk's pathway weights are unsigned: they say that a receptor, an intermediate (SSC) and a target gene co-vary,
+not whether the target goes up or down in disease. This short, separate analysis adds the missing information. For every
+gene that appears in a final pathway (receptor, intermediate or target) it reports the AD-vs-Control change in
+microglia.
+
+It needs the result tables of `01_sigxtalk_pipeline.Rmd` (`results/tables/results_AD_full.csv` and
+`results/tables/results_Control_full.csv`; the repository already contains them) and the GEO files in `data/`.
+The stored output of this analysis is `results/tables/pathway_genes_DE_direction_MG.csv`.
+
+*Why a lighter object is enough.* Seurat's log-normalization is applied to each nucleus independently, so
+normalizing only the microglia gives the same values as normalizing all nuclei first. Only microglia are
+therefore loaded here, which keeps memory use small.
+
+# Paths and libraries
+
+```{r setup-paths}
+stopifnot("Knit this file from inside the analysis/ folder (RStudio does this by default)." =
+            basename(getwd()) == "analysis")
+repo_root   <- normalizePath("..")
+data_dir    <- file.path(repo_root, "data")
+results_dir <- file.path(repo_root, "results")
+h5_file     <- file.path(data_dir, "GSE174367_snRNA-seq_filtered_feature_bc_matrix.h5")
+meta_file   <- file.path(data_dir, "GSE174367_snRNA-seq_cell_meta.csv")
+stopifnot(file.exists(h5_file), file.exists(meta_file))
+
+library(Seurat)
+library(dplyr)
+```
+
+# Microglia-only Seurat object
+
+The same barcode alignment and the same gene filter (a gene must be detected in at least 3 nuclei) as in the main
+pipeline are used, so the number of genes in the object (which the adjusted p-value depends on) matches.
+
+```{r load-microglia}
+mat  <- Read10X_h5(h5_file)
+meta <- read.csv(meta_file)
+mat  <- mat[, colnames(mat) %in% meta$Barcode]
+rownames(meta) <- meta$Barcode
+meta <- meta[colnames(mat), ]
+stopifnot(all(colnames(mat) == rownames(meta)))
+
+mg_cells  <- rownames(meta)[meta$Cell.Type == "MG"]
+keep_gene <- Matrix::rowSums(mat > 0) >= 3          # same rule as CreateSeuratObject(min.cells = 3)
+mg_only   <- CreateSeuratObject(counts = mat[keep_gene, mg_cells], meta.data = meta[mg_cells, ],
+                                min.features = 200)
+rm(mat); gc()
+
+mg_only <- NormalizeData(mg_only)
+Idents(mg_only) <- mg_only$Diagnosis
+table(Idents(mg_only))
+```
+
+# Differential expression for the pathway genes
+
+All genes of the final pathways are tested with **no filtering** (`logfc.threshold = 0`, `min.pct = 0`), so that none is
+dropped. A positive `avg_log2FC` means higher in AD. `pct.1` and `pct.2` are the fractions of AD and Control
+microglia in which the gene is detected.
+
+```{r de-direction}
+res_ad <- read.csv(file.path(results_dir, "tables", "results_AD_full.csv"))
+res_ct <- read.csv(file.path(results_dir, "tables", "results_Control_full.csv"))
+pathway_genes <- unique(c(res_ad$Receptor, res_ad$SSC, res_ad$Target,
+                          res_ct$Receptor, res_ct$SSC, res_ct$Target))
+
+de <- FindMarkers(mg_only, ident.1 = "AD", ident.2 = "Control", features = pathway_genes,
+                  logfc.threshold = 0, min.pct = 0)
+de$gene <- rownames(de)
+
+is_in <- function(g, col) g %in% c(res_ad[[col]], res_ct[[col]])
+de$role <- sapply(de$gene, function(g)
+  paste(c(if (is_in(g, "Receptor")) "receptor",
+          if (is_in(g, "SSC"))      "SSC",
+          if (is_in(g, "Target"))   "target"), collapse = "/"))
+de$direction <- ifelse(de$avg_log2FC > 0, "up in AD", "down in AD")
+
+out <- de[order(de$role, -de$avg_log2FC),
+          c("gene", "role", "avg_log2FC", "pct.1", "pct.2", "p_val_adj", "direction")]
+write.csv(out, file.path(results_dir, "tables", "pathway_genes_DE_direction_MG.csv"), row.names = FALSE)
+out
+```
+
+# How to read this
+
+* **Targets** were chosen as AD-vs-Control DE genes, so most are significant; the useful information is their direction.
+* **Receptors and intermediates** were *not* selected by DE, so a significant change here is informative and a
+  non-significant one is too (for example, the AD-specific receptor MRC1 is not significantly changed).
+* **Mixed signs are expected.** The pathway weights are unsigned, so a route can link a gene that goes up to one that goes down.
+* The p-values are computed on individual nuclei, which are not independent (nuclei from one donor are correlated). They are
+  optimistic. The direction and size of `avg_log2FC` are the more reliable parts of this table. A donor-level
+  (pseudobulk) test would be the stricter analysis.
