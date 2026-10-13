@@ -236,9 +236,6 @@ All numbers below come from the tables in `results/tables/`.
 * **The counts of routes are not a measure of signaling strength.** The count is capped by the number of surviving
   receptors, and AD has twice as many microglia (2,742 vs 1,384), which favors detecting more links.
 * **Statistics:** the DE p-values treat every nucleus as independent. There is no donor-level replication.
-* **Known issue.** In a later spot check, the Control CellChat checkpoint did not reproduce the APP → SORL1 and
-  APP → CD74 rows listed in `results/tables/LR_pairs_into_MG_AD_vs_Control.csv`. Treat the Control side of that
-  one table as provisional until it is re-derived (see `docs/project_notes.md`).
 
 ## 9. Reproducibility
 
