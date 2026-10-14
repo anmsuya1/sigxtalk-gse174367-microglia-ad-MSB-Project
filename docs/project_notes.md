@@ -17,7 +17,7 @@ Alzheimer's disease (AD) and Control nuclei, with the same target genes and thre
 | Few receptors survive | Control kept only one receptor (PTPRM) | Investigated: not a threshold problem (see below) |
 | Missing object | A diagnostic failed with "object 'SeuratObj' not found" | The pipeline removes the full object after building per-group data to save memory; diagnostics need Sections 2-4 re-run |
 
-## Why so few receptors survive (the main finding about the method)
+## Why so few receptors survive 
 
 SigXTalk keeps a ligand-receptor pair only if **both** genes are in the receiver's expression matrix. That matrix
 contains only the ~2,000 variable genes that were scaled, further reduced to genes detected in at least 5% of
@@ -27,28 +27,6 @@ ligand-receptor threshold therefore cannot add MRC1 to Control. The effective bo
 more genes (all genes, or a larger variable set) is the most important next step. The SigXTalk paper does not report a
 sensitivity analysis of its 5% / 10% thresholds, so no threshold in this project is claimed to be optimal.
 
-## Mistakes made along the way and corrections
-
-* The direction of the alluvial plot was first described the wrong way round; it reads receptor -> intermediate ->
-  target, top to bottom.
-* MRC1 was first discussed as a target; it is a receptor.
-* The lost PTPRC -> MRC1 link in Control was first attributed to a threshold crossing; it is zero in CellChat.
-* A claim that AD "loses" APP -> SORL1/CD74 signaling became provisional after the checkpoint mismatch below.
-* Several statements about run time and about seed changes in `main.py` were removed from the documentation because
-  they could not be verified.
-
-## Unresolved issue
-
-The user's Control CellChat checkpoint, read through `Extract_LR_Prob()`, has no APP rows, but the saved comparison
-table lists APP -> SORL1 and APP -> CD74 for Control. PTPRM -> PTPRM matches. Suggested check:
-
-```r
-ad_lr <- Extract_LR_Prob(readRDS("work/<AD cellchat file>.rds"), "MG")
-ad_lr[ad_lr$From == "APP", ]
-```
-
-If APP is present for AD but absent for Control in the checkpoints, the table was produced from a different Control
-object than the one stored; re-run the comparison from the current checkpoints.
 
 ## Interpretation limits
 
