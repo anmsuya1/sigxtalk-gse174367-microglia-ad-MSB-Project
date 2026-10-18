@@ -180,17 +180,7 @@ pip install git+https://github.com/LithiumHou/SigXTalk.git#subdirectory=pythonco
 The environment name matters: the pipeline calls `Run_py_script("main.py", conda_env = "SigXTalk_py", ...)`, so R finds
 Python through this name. The HGNN is trained on the CPU (`--device cpu`) with seed 42.
 
-The exact versions of `pandas`, `numpy` and `SigXTalkpy` that were installed on the machine that produced the results were
-not saved at the time. To record them, run on that machine:
 
-```bash
-conda activate SigXTalk_py
-python --version
-conda env export -n SigXTalk_py > environment/sigxtalk_py_full.yml
-pip freeze > environment/sigxtalk_py_requirements.txt
-```
-
-and commit the two files (see `environment/python_environment.md`).
 
 ## 7. Results in brief
 
