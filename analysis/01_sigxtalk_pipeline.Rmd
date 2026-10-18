@@ -1,13 +1,7 @@
 ---
 title: "Receptor-to-target crosstalk in microglia in Alzheimer's disease (SigXTalk on GSE174367)"
 author: "Ahmed"
-date: "`r Sys.Date()`"
-output:
-  html_document:
-    toc: true
-    toc_depth: 2
-    code_folding: show
----
+
 
 # Purpose
 
@@ -81,7 +75,7 @@ set.seed(PRS_SEED)   # global seed for any remaining stochastic base-R / Seurat 
 
 # 2. Project folders, input files and memory report
 
-Paths are built relative to the repository root, never to a particular computer. The repository root is the
+Paths are built relative to the repository root. The repository root is the
 folder above `analysis/`.
 
 * `data/`: raw GEO files (not stored in git, they are large)
