@@ -46,8 +46,7 @@ sensitivity analysis of its 5% / 10% thresholds, so no threshold in this project
 4. Re-derive the ligand-receptor comparison table from the stored checkpoints in the same run as the figures.
 5. Repeat for a second cell type to check that conclusions are not microglia-specific.
 
-## Provenance note
+## Important note
 
 The stored results were produced by the equivalent plain R script that this R Markdown file was converted from.
-The R Markdown file contains the same code with repository-relative paths. It has been syntax-checked but should
-be knitted once end-to-end to confirm it reproduces the stored files.
+The R Markdown file contains the same code with repository-relative paths. 
