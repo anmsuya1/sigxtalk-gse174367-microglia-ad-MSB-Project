@@ -39,14 +39,3 @@ python -c "import torch, pandas, numpy; from SigXTalkpy import predictor, traini
 `main.py` imports `torch`, `pandas`, `numpy` and the `SigXTalkpy` package (`predictor`, `training`, `preprocessing`). On Apple
 Silicon there is no CUDA, so the HGNN runs on the CPU (`--device cpu`), with random seed 42.
 
-## What was not recorded
-
-The versions of `pandas`, `numpy` and `SigXTalkpy` that were actually installed when the results were produced were not saved.
-On the machine that ran the pipeline, record them and commit the files:
-
-```bash
-conda activate SigXTalk_py
-python --version
-conda env export -n SigXTalk_py > environment/sigxtalk_py_full.yml
-pip freeze > environment/sigxtalk_py_requirements.txt
-```
